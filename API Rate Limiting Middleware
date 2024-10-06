@@ -1,0 +1,34 @@
+from time import time
+from collections import defaultdict
+
+class RateLimiter:
+    def __init__(self, max_requests, time_window):
+        self.max_requests = max_requests
+        self.time_window = time_window
+        self.requests = defaultdict(list)
+
+    def is_allowed(self, client_id):
+        current_time = time()
+        if client_id not in self.requests:
+            self.requests[client_id] = []
+        
+        # Filter out requests older than the time window
+        self.requests[client_id] = [
+            req_time for req_time in self.requests[client_id] 
+            if current_time - req_time < self.time_window
+        ]
+        
+        if len(self.requests[client_id]) < self.max_requests:
+            self.requests[client_id].append(current_time)
+            return True
+        else:
+            return False
+
+# Usage example
+limiter = RateLimiter(max_requests=5, time_window=60)
+
+client_id = 'user123'
+if limiter.is_allowed(client_id):
+    print("Request allowed")
+else:
+    print("Rate limit exceeded")
